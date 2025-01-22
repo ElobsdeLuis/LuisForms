@@ -5,6 +5,97 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Creador de Formularios</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script type="module">
+        // Importamos los módulos necesarios de Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+    
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDO2rnW8euKCgglWVFCR0OH-_fgzJ8SXes",
+            authDomain: "luisforms-29b69.firebaseapp.com",
+            projectId: "luisforms-29b69",
+            storageBucket: "luisforms-29b69.appspot.com",
+            messagingSenderId: "220146401478",
+            appId: "1:220146401478:web:78c1792671f98a327f17c7",
+            measurementId: "G-5031BDH44M"
+        };
+    
+        // Inicializamos Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+    
+        // Función para registrar usuarios
+        async function register() {
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+    
+            if (!email || !password || !confirmPassword) {
+                alert("Por favor, completa todos los campos");
+                return;
+            }
+    
+            if (password !== confirmPassword) {
+                alert("Las contraseñas no coinciden");
+                return;
+            }
+    
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                await setDoc(doc(db, "users", user.uid), {
+                    email: email,
+                    createdAt: serverTimestamp()
+                });
+                alert("Registro exitoso");
+                showLoginForm();
+            } catch (error) {
+                alert("Error al registrarse: " + error.message);
+            }
+        }
+    
+        // Función para iniciar sesión
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+    
+            if (!email || !password) {
+                alert("Por favor, completa todos los campos");
+                return;
+            }
+    
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                alert(`Bienvenido, ${user.email}`);
+                // Mostrar el dashboard
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+            } catch (error) {
+                alert("Error al iniciar sesión: " + error.message);
+            }
+        }
+    
+        // Función para cerrar sesión
+        async function logout() {
+            await signOut(auth);
+            alert("Sesión cerrada");
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+        }
+    
+        // Detectar cambios en el estado de autenticación
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                console.log("Usuario logueado:", user.email);
+            } else {
+                console.log("No hay usuario logueado");
+            }
+        });
+    </script>    
     <link rel="icon" type="image/png" href="favicon.png">
     <style>
         .toast {
@@ -203,49 +294,6 @@
                 const v = c == 'x' ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
             });
-        }
-
-        function register() {
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            if (!email || !password || !confirmPassword) {
-                showToast('Por favor, completa todos los campos');
-                return;
-            }
-
-            if (password !== confirmPassword) {
-                showToast('Las contraseñas no coinciden');
-                return;
-            }
-            
-            if (users[email]) {
-                showToast('Este usuario ya existe');
-                return;
-            }
-
-            users[email] = { password, forms: [] };
-            localStorage.setItem('users', JSON.stringify(users));
-            showToast('Registro exitoso');
-            showLoginForm();
-        }
-
-        function login() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-
-            if (users[email]?.password === password) {
-                currentUser = email;
-                document.getElementById('loginForm').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'block';
-                document.getElementById('userInfo').style.display = 'flex';
-                document.getElementById('userEmail').textContent = email;
-                loadForms();
-                showToast('Bienvenido ' + email);
-            } else {
-                showToast('Credenciales incorrectas');
-            }
         }
 
         function logout() {
