@@ -131,7 +131,7 @@
                 </button>
                 <button onclick="saveForm()" 
                     class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors">
-                    Guardar Formulario
+                    Finalizar Formulario
                 </button>
             </div>
         </div>
@@ -531,7 +531,7 @@
         window.addEventListener('load', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const encodedForm = urlParams.get('form');
-            
+
             if (encodedForm) {
                 try {
                     const formData = JSON.parse(atob(encodedForm));
