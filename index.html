@@ -72,23 +72,39 @@
     </nav>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div id="auth" class="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
+        <div id="loginForm" class="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
             <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Iniciar Sesión</h2>
             <div class="space-y-4">
-                <input type="email" id="email" placeholder="Email" 
+                <input type="email" id="loginEmail" placeholder="Email" 
                     class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <input type="password" id="password" placeholder="Contraseña" 
+                <input type="password" id="loginPassword" placeholder="Contraseña" 
                     class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <div class="flex space-x-4">
-                    <button onclick="login()" 
-                        class="w-1/2 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
-                        Iniciar Sesión
-                    </button>
-                    <button onclick="register()" 
-                        class="w-1/2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
-                        Registrarse
-                    </button>
-                </div>
+                <button onclick="login()" 
+                    class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
+                    Iniciar Sesión
+                </button>
+                <p class="text-center text-gray-600">¿Aún no tienes cuenta? 
+                    <a href="#" onclick="showRegistrationForm()" class="text-indigo-600 hover:text-indigo-800">Regístrate</a>
+                </p>
+            </div>
+        </div>
+
+        <div id="registrationForm" class="hidden max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Registro</h2>
+            <div class="space-y-4">
+                <input type="email" id="registerEmail" placeholder="Email" 
+                    class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="password" id="registerPassword" placeholder="Contraseña" 
+                    class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="password" id="confirmPassword" placeholder="Confirmar Contraseña" 
+                    class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <button onclick="register()" 
+                    class="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
+                    Registrarse
+                </button>
+                <p class="text-center text-gray-600">¿Ya tienes cuenta? 
+                    <a href="#" onclick="showLoginForm()" class="text-indigo-600 hover:text-indigo-800">Inicia Sesión</a>
+                </p>
             </div>
         </div>
 
@@ -143,388 +159,388 @@
 
     <script>
         let currentUser = null;
-const users = JSON.parse(localStorage.getItem('users') || '{}');
-const forms = JSON.parse(localStorage.getItem('forms') || '{}');
-const responses = JSON.parse(localStorage.getItem('responses') || '{}');
+        const users = JSON.parse(localStorage.getItem('users') || '{}');
+        const forms = JSON.parse(localStorage.getItem('forms') || '{}');
+        const responses = JSON.parse(localStorage.getItem('responses') || '{}');
 
-const BASE_URL = 'https://elobsdeluis.github.io/LuisForms/';
+        const BASE_URL = window.location.href.split('?')[0];
 
-document.addEventListener('DOMContentLoaded', () => {
-    checkFormUrl();
-});
-
-function showToast(message, duration = 3000) {
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => toast.classList.add('show'), 100);
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, duration);
-}
-
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        showToast('Enlace copiado al portapapeles');
-    }).catch(err => {
-        console.error('Error al copiar:', err);
-        showToast('Error al copiar el enlace');
-    });
-}
-
-function generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
-
-function checkFormUrl() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const encodedForm = urlParams.get('form');
-
-    if (encodedForm) {
-        try {
-            const formData = JSON.parse(atob(encodedForm));
-            showFormViewer(formData);
-        } catch (e) {
-            console.error('Invalid form data');
-            showToast('Error al cargar el formulario');
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registrationForm').style.display = 'none';
         }
-    }
-}
 
-function register() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    
-    if (!email || !password) {
-        showToast('Por favor, completa todos los campos');
-        return;
-    }
-    
-    if (users[email]) {
-        showToast('Este usuario ya existe');
-        return;
-    }
+        function showRegistrationForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registrationForm').style.display = 'block';
+        }
 
-    users[email] = { password, forms: [] };
-    localStorage.setItem('users', JSON.stringify(users));
-    login();
-}
+        function showToast(message, duration = 3000) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
 
-function login() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
-    if (users[email]?.password === password) {
-        currentUser = email;
-        document.getElementById('auth').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-        document.getElementById('userInfo').style.display = 'flex';
-        document.getElementById('userEmail').textContent = email;
-        loadForms();
-        showToast('Bienvenido ' + email);
-    } else {
-        showToast('Credenciales incorrectas');
-    }
-}
-
-function logout() {
-    currentUser = null;
-    document.getElementById('auth').style.display = 'block';
-    document.getElementById('dashboard').style.display = 'none';
-    document.getElementById('userInfo').style.display = 'none';
-    document.getElementById('email').value = '';
-    document.getElementById('password').value = '';
-    showToast('Sesión cerrada');
-}
-
-function loadForms() {
-    const formsList = document.getElementById('formsList');
-    formsList.innerHTML = '';
-    
-    users[currentUser].forms.forEach(formId => {
-        const form = forms[formId];
-        const div = document.createElement('div');
-        div.className = 'bg-white rounded-lg shadow-md p-6';
-        
-        const encodedForm = btoa(JSON.stringify(form));
-        const formUrl = `${BASE_URL}?form=${encodedForm}`;
-        
-        div.innerHTML = `
-            <h3 class="text-xl font-semibold mb-4">${form.title}</h3>
-            <div class="form-link">
-                <p class="text-sm text-gray-600 mb-1">Enlace para compartir:</p>
-                <p class="text-sm">${formUrl}</p>
-                <button onclick="copyToClipboard('${formUrl}')" 
-                    class="mt-2 bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-300">
-                    Copiar enlace
-                </button>
-            </div>
-            <div class="flex justify-between mt-4">
-                <button onclick="viewResults('${formId}')" 
-                    class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors">
-                    Ver Resultados
-                </button>
-                <button onclick="deleteForm('${formId}')" 
-                    class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
-                    Eliminar
-                </button>
-            </div>
-        `;
-        formsList.appendChild(div);
-    });
-}
-
-function showFormBuilder() {
-    document.getElementById('dashboard').style.display = 'none';
-    document.getElementById('formBuilder').style.display = 'block';
-    document.getElementById('fields').innerHTML = '';
-    document.getElementById('formTitle').value = '';
-}
-
-function addField() {
-    const fieldsDiv = document.getElementById('fields');
-    const fieldDiv = document.createElement('div');
-    fieldDiv.className = 'field-container';
-    fieldDiv.innerHTML = `
-        <div class="flex items-center justify-between mb-4">
-            <input type="text" placeholder="Pregunta" class="question w-2/3 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <select class="type w-1/4 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="text">Texto</option>
-                <option value="number">Número</option>
-                <option value="select">Opción Múltiple</option>
-            </select>
-        </div>
-        <div class="options hidden">
-            <input type="text" placeholder="Opciones (separadas por coma)" 
-                class="w-full px-4 py-2 border rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        </div>
-        <button onclick="this.parentElement.remove()" 
-            class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
-            Eliminar Campo
-        </button>
-    `;
-
-    fieldDiv.querySelector('.type').addEventListener('change', function(e) {
-        const optionsDiv = fieldDiv.querySelector('.options');
-        optionsDiv.style.display = e.target.value === 'select' ? 'block' : 'none';
-    });
-
-    fieldsDiv.appendChild(fieldDiv);
-}
-
-function saveForm() {
-    const title = document.getElementById('formTitle').value;
-    if (!title) {
-        showToast('Por favor, añade un título al formulario');
-        return;
-    }
-
-    const fields = Array.from(document.getElementsByClassName('field-container')).map(field => ({
-        question: field.querySelector('.question').value,
-        type: field.querySelector('.type').value,
-        options: field.querySelector('.type').value === 'select' ? 
-            field.querySelector('.options input').value.split(',').map(o => o.trim()) : []
-    }));
-
-    if (fields.length === 0) {
-        showToast('Por favor, añade al menos un campo al formulario');
-        return;
-    }
-
-    const formId = generateUUID();
-    forms[formId] = { title, fields };
-    users[currentUser].forms.push(formId);
-
-    localStorage.setItem('forms', JSON.stringify(forms));
-    localStorage.setItem('users', JSON.stringify(users));
-
-    showToast('Formulario guardado con éxito');
-    document.getElementById('formBuilder').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    loadForms();
-}
-
-function deleteForm(formId) {
-    if (!confirm('¿Estás seguro de que deseas eliminar este formulario?')) {
-        return;
-    }
-
-    users[currentUser].forms = users[currentUser].forms.filter(id => id !== formId);
-    delete forms[formId];
-    delete responses[formId];
-
-    localStorage.setItem('forms', JSON.stringify(forms));
-    localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('responses', JSON.stringify(responses));
-
-    loadForms();
-    showToast('Formulario eliminado con éxito');
-}
-
-function showFormViewer(formData) {
-    document.getElementById('auth').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'none';
-    document.getElementById('formViewer').style.display = 'block';
-    
-    document.getElementById('viewerTitle').textContent = formData.title;
-    const viewerFields = document.getElementById('viewerFields');
-    viewerFields.innerHTML = '';
-    
-    formData.fields.forEach(field => {
-        const fieldDiv = document.createElement('div');
-        fieldDiv.className = 'field-container';
-        fieldDiv.innerHTML = `<label class="block mb-2 font-medium">${field.question}</label>`;
-
-        if (field.type === 'select') {
-            const select = document.createElement('select');
-            select.className = 'w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500';
-            field.options.forEach(option => {
-                const optionEl = document.createElement('option');
-                optionEl.value = option;
-                optionEl.textContent = option;
-                select.appendChild(optionEl);
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Enlace copiado al portapapeles');
+            }).catch(err => {
+                console.error('Error al copiar:', err);
+                showToast('Error al copiar el enlace');
             });
-            fieldDiv.appendChild(select);
-        } else {
-            const input = document.createElement('input');
-            input.type = field.type;
-            input.className = 'w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500';
-            fieldDiv.appendChild(input);
         }
 
-        viewerFields.appendChild(fieldDiv);
-    });
-}
-
-function submitResponse() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const encodedForm = urlParams.get('form');
-    const formData = JSON.parse(atob(encodedForm));
-    
-    // Encontrar el ID del formulario basado en sus datos
-    let formId = null;
-    for (const [id, form] of Object.entries(forms)) {
-        if (form.title === formData.title && 
-            JSON.stringify(form.fields) === JSON.stringify(formData.fields)) {
-            formId = id;
-            break;
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
         }
-    }
-    
-    if (!formId) {
-        showToast('Error al enviar la respuesta');
-        return;
-    }
 
-    const formResponse = {};
-    const fields = document.getElementById('viewerFields').getElementsByClassName('field-container');
-    
-    Array.from(fields).forEach(field => {
-        const question = field.querySelector('label').textContent;
-        const input = field.querySelector('input, select');
-        formResponse[question] = input.value;
-    });
+        function register() {
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!email || !password || !confirmPassword) {
+                showToast('Por favor, completa todos los campos');
+                return;
+            }
 
-    // Añadir timestamp a la respuesta
-    formResponse.timestamp = new Date().toLocaleString();
+            if (password !== confirmPassword) {
+                showToast('Las contraseñas no coinciden');
+                return;
+            }
+            
+            if (users[email]) {
+                showToast('Este usuario ya existe');
+                return;
+            }
 
-    if (!responses[formId]) {
-        responses[formId] = [];
-    }
-    responses[formId].push(formResponse);
-    localStorage.setItem('responses', JSON.stringify(responses));
+            users[email] = { password, forms: [] };
+            localStorage.setItem('users', JSON.stringify(users));
+            showToast('Registro exitoso');
+            showLoginForm();
+        }
 
-    const formViewer = document.getElementById('formViewer');
-    formViewer.innerHTML = `
-        <div class="text-center py-8">
-            <h2 class="text-2xl font-bold text-green-600 mb-4">¡Gracias por tu respuesta!</h2>
-            <p class="text-gray-600">Tu respuesta ha sido registrada correctamente.</p>
-        </div>
-    `;
+        function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
 
-    showToast('Respuesta enviada con éxito');
-}
+            if (users[email]?.password === password) {
+                currentUser = email;
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                document.getElementById('userInfo').style.display = 'flex';
+                document.getElementById('userEmail').textContent = email;
+                loadForms();
+                showToast('Bienvenido ' + email);
+            } else {
+                showToast('Credenciales incorrectas');
+            }
+        }
 
-function viewResults(formId) {
-    const formData = forms[formId];
-    const formResponses = responses[formId] || [];
-    const resultsDiv = document.getElementById('resultsData');
-    resultsDiv.innerHTML = '';
+        function logout() {
+            currentUser = null;
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+            showToast('Sesión cerrada');
+        }
 
-    // Mostrar el título del formulario y el contador de respuestas
-    resultsDiv.innerHTML = `
-        <h3 class="text-2xl font-bold mb-6">${formData.title}</h3>
-        <p class="text-gray-600 mb-6">Total de respuestas: ${formResponses.length}</p>
-    `;
+        function loadForms() {
+            const formsList = document.getElementById('formsList');
+            formsList.innerHTML = '';
+            
+            users[currentUser].forms.forEach(formId => {
+                const form = forms[formId];
+                const div = document.createElement('div');
+                div.className = 'bg-white rounded-lg shadow-md p-6';
+                
+                const formData = {
+                    id: formId,
+                    title: form.title,
+                    fields: form.fields
+                };
+                const encodedForm = btoa(JSON.stringify(formData));
+                const formUrl = `${BASE_URL}?form=${encodedForm}`;
+                
+                div.innerHTML = `
+                    <h3 class="text-xl font-semibold mb-4">${form.title}</h3>
+                    <div class="form-link">
+                        <p class="text-sm text-gray-600 mb-1">Enlace para compartir:</p>
+                        <p class="text-sm">${formUrl}</p>
+                        <button onclick="copyToClipboard('${formUrl}')" 
+                            class="mt-2 bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-300">
+                            Copiar enlace
+                        </button>
+                    </div>
+                    <div class="flex justify-between mt-4">
+                        <button onclick="viewResults('${formId}')" 
+                            class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors">
+                            Ver Resultados
+                        </button>
+                        <button onclick="deleteForm('${formId}')" 
+                            class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
+                            Eliminar
+                        </button>
+                    </div>
+                `;
+                formsList.appendChild(div);
+            });
+        }
 
-    // Si no hay respuestas, mostrar mensaje
-    if (formResponses.length === 0) {
-        resultsDiv.innerHTML += `
-            <div class="response-card">
-                <p class="text-gray-500 text-center">No hay respuestas todavía para este formulario.</p>
-            </div>
-        `;
-        document.getElementById('dashboard').style.display = 'none';
-        document.getElementById('results').style.display = 'block';
-        return;
-    }
+        function showFormBuilder() {
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('formBuilder').style.display = 'block';
+            document.getElementById('fields').innerHTML = '';
+            document.getElementById('formTitle').value = '';
+        }
 
-    // Mostrar cada respuesta con su timestamp
-    formResponses.forEach((response, index) => {
-        const responseDiv = document.createElement('div');
-        responseDiv.className = 'response-card';
-        
-        // Añadir encabezado con número de respuesta y timestamp
-        responseDiv.innerHTML = `
-            <div class="flex justify-between items-center mb-4">
-                <h4 class="text-lg font-semibold">Respuesta ${index + 1}</h4>
-                <span class="text-sm text-gray-500">${response.timestamp || 'Fecha no disponible'}</span>
-            </div>
-        `;
-        
-        // Mostrar cada pregunta y respuesta
-        formData.fields.forEach(field => {
-            const answer = response[field.question] || "Sin respuesta";
-            responseDiv.innerHTML += `
-                <div class="mb-2 p-2 bg-gray-50 rounded">
-                    <span class="font-medium text-gray-700">${field.question}:</span>
-                    <span class="ml-2 text-gray-900">${answer}</span>
+        function addField() {
+            const fieldsDiv = document.getElementById('fields');
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'field-container';
+            fieldDiv.innerHTML = `
+                <div class="flex items-center justify-between mb-4">
+                    <input type="text" placeholder="Pregunta" class="question w-2/3 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <select class="type w-1/4 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="text">Texto</option>
+                        <option value="number">Número</option>
+                        <option value="select">Opción Múltiple</option>
+                    </select>
+                </div>
+                <div class="options hidden">
+                    <input type="text" placeholder="Opciones (separadas por coma)" 
+                        class="w-full px-4 py-2 border rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <button onclick="this.parentElement.remove()" 
+                    class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
+                    Eliminar Campo
+                </button>
+            `;
+
+            fieldDiv.querySelector('.type').addEventListener('change', function(e) {
+                const optionsDiv = fieldDiv.querySelector('.options');
+                optionsDiv.style.display = e.target.value === 'select' ? 'block' : 'none';
+            });
+
+            fieldsDiv.appendChild(fieldDiv);
+        }
+
+        function saveForm() {
+            const title = document.getElementById('formTitle').value;
+            if (!title) {
+                showToast('Por favor, añade un título al formulario');
+                return;
+            }
+
+            const fields = Array.from(document.getElementsByClassName('field-container')).map(field => ({
+                question: field.querySelector('.question').value,
+                type: field.querySelector('.type').value,
+                options: field.querySelector('.type').value === 'select' ? 
+                    field.querySelector('.options input').value.split(',').map(o => o.trim()) : []
+            }));
+
+            if (fields.length === 0) {
+                showToast('Por favor, añade al menos un campo al formulario');
+                return;
+            }
+
+            const formId = generateUUID();
+            forms[formId] = { title, fields };
+            users[currentUser].forms.push(formId);
+
+            localStorage.setItem('forms', JSON.stringify(forms));
+            localStorage.setItem('users', JSON.stringify(users));
+
+            showToast('Formulario guardado con éxito');
+            document.getElementById('formBuilder').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            loadForms();
+        }
+
+        function deleteForm(formId) {
+            if (!confirm('¿Estás seguro de que deseas eliminar este formulario?')) {
+                return;
+            }
+
+            users[currentUser].forms = users[currentUser].forms.filter(id => id !== formId);
+            delete forms[formId];
+            delete responses[formId];
+
+            localStorage.setItem('forms', JSON.stringify(forms));
+            localStorage.setItem('users', JSON.stringify(users));
+            localStorage.setItem('responses', JSON.stringify(responses));
+
+            loadForms();
+            showToast('Formulario eliminado con éxito');
+        }
+
+        function showFormViewer(formData) {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registrationForm').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('formViewer').style.display = 'block';
+            
+            document.getElementById('viewerTitle').textContent = formData.title;
+            const viewerFields = document.getElementById('viewerFields');
+            viewerFields.innerHTML = '';
+            
+            formData.fields.forEach(field => {
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'field-container';
+                fieldDiv.innerHTML = `<label class="block mb-2 font-medium">${field.question}</label>`;
+
+                if (field.type === 'select') {
+                    const select = document.createElement('select');
+                    select.className = 'w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500';
+                    field.options.forEach(option => {
+                        const optionEl = document.createElement('option');
+                        optionEl.value = option;
+                        optionEl.textContent = option;
+                        select.appendChild(optionEl);
+                    });
+                    fieldDiv.appendChild(select);
+                } else {
+                    const input = document.createElement('input');
+                    input.type = field.type;
+                    input.className = 'w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500';
+                    fieldDiv.appendChild(input);
+                }
+
+                viewerFields.appendChild(fieldDiv);
+            });
+        }
+
+        function submitResponse() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedForm = urlParams.get('form');
+            const formData = JSON.parse(atob(encodedForm));
+            
+            let formId = formData.id;
+            
+            if (!formId) {
+                for (const [id, form] of Object.entries(forms)) {
+                    if (form.title === formData.title && 
+                        JSON.stringify(form.fields) === JSON.stringify(formData.fields)) {
+                        formId = id;
+                        break;
+                    }
+                }
+            }
+            
+            if (!formId) {
+                showToast('Error al enviar la respuesta');
+                return;
+            }
+
+            const formResponse = {};
+            const fields = document.getElementById('viewerFields').getElementsByClassName('field-container');
+            
+            Array.from(fields).forEach(field => {
+                const question = field.querySelector('label').textContent;
+                const input = field.querySelector('input, select');
+                formResponse[question] = input.value;
+            });
+
+            formResponse.timestamp = new Date().toLocaleString();
+
+            if (!responses[formId]) {
+                responses[formId] = [];
+            }
+            responses[formId].push(formResponse);
+            localStorage.setItem('responses', JSON.stringify(responses));
+
+            const formViewer = document.getElementById('formViewer');
+            formViewer.innerHTML = `
+                <div class="text-center py-8">
+                    <h2 class="text-2xl font-bold text-green-600 mb-4">¡Gracias por tu respuesta!</h2>
+                    <p class="text-gray-600">Tu respuesta ha sido registrada correctamente.</p>
                 </div>
             `;
-        });
 
-        resultsDiv.appendChild(responseDiv);
-    });
-
-    document.getElementById('dashboard').style.display = 'none';
-    document.getElementById('results').style.display = 'block';
-}
-
-function backToDashboard() {
-    document.getElementById('results').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-}
-
-window.addEventListener('load', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const encodedForm = urlParams.get('form');
-    
-    if (encodedForm) {
-        try {
-            const formData = JSON.parse(atob(encodedForm));
-            showFormViewer(formData);
-        } catch (e) {
-            console.error('Invalid form data');
+            showToast('Respuesta enviada con éxito');
         }
-    }
-});
+
+        function viewResults(formId) {
+            const formData = forms[formId];
+            const formResponses = responses[formId] || [];
+            const resultsDiv = document.getElementById('resultsData');
+            resultsDiv.innerHTML = '';
+
+            resultsDiv.innerHTML = `
+                <h3 class="text-2xl font-bold mb-6">${formData.title}</h3>
+                <p class="text-gray-600 mb-6">Total de respuestas: ${formResponses.length}</p>
+            `;
+
+            if (formResponses.length === 0) {
+                resultsDiv.innerHTML += `
+                    <div class="response-card">
+                        <p class="text-gray-500 text-center">No hay respuestas todavía para este formulario.</p>
+                    </div>
+                `;
+                document.getElementById('dashboard').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
+                return;
+            }
+
+            formResponses.forEach((response, index) => {
+                const responseDiv = document.createElement('div');
+                responseDiv.className = 'response-card';
+                
+                responseDiv.innerHTML = `
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-lg font-semibold">Respuesta ${index + 1}</h4>
+                        <span class="text-sm text-gray-500">${response.timestamp || 'Fecha no disponible'}</span>
+                    </div>
+                `;
+                
+                formData.fields.forEach(field => {
+                    const answer = response[field.question] || "Sin respuesta";
+                    responseDiv.innerHTML += `
+                        <div class="mb-2 p-2 bg-gray-50 rounded">
+                            <span class="font-medium text-gray-700">${field.question}:</span>
+                            <span class="ml-2 text-gray-900">${answer}</span>
+                        </div>
+                    `;
+                });
+
+                resultsDiv.appendChild(responseDiv);
+            });
+
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function backToDashboard() {
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+        }
+
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedForm = urlParams.get('form');
+            
+            if (encodedForm) {
+                try {
+                    const formData = JSON.parse(atob(encodedForm));
+                    showFormViewer(formData);
+                } catch (e) {
+                    console.error('Invalid form data');
+                }
+            }
+        });
     </script>
 </body>
 </html>
