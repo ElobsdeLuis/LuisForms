@@ -14,7 +14,7 @@
             background-color: #1a1a1a;
             color: white;
             padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
+            border-radius: 0.5rem; 
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             z-index: 50;
             transform: translateY(100%);
@@ -407,6 +407,7 @@ function showFormViewer(formData) {
 function submitResponse() {
     const urlParams = new URLSearchParams(window.location.search);
     const encodedForm = urlParams.get('form');
+    const formData = JSON.parse(atob(encodedForm));
     const formResponse = {};
     
     const fields = document.getElementById('viewerFields').getElementsByClassName('field-container');
@@ -417,7 +418,7 @@ function submitResponse() {
     });
 
     let responses = JSON.parse(localStorage.getItem('responses') || '{}');
-    const formId = btoa(JSON.stringify({ responses: formResponse }));
+    const formId = btoa(JSON.stringify(formData));
     
     if (!responses[formId]) {
         responses[formId] = [];
@@ -425,12 +426,39 @@ function submitResponse() {
     responses[formId].push(formResponse);
     localStorage.setItem('responses', JSON.stringify(responses));
 
-    document.getElementById('formViewer').innerHTML = `
+    const formViewer = document.getElementById('formViewer');
+    formViewer.innerHTML = `
         <div class="text-center py-8">
             <h2 class="text-2xl font-bold text-green-600 mb-4">¡Gracias por tu respuesta!</h2>
-            <p class="text-gray-600">Tu respuesta ha sido registrada correctamente.</p>
+            <p class="text-gray-600 mb-8">Tu respuesta ha sido registrada correctamente.</p>
+        </div>
+        <div class="max-w-3xl mx-auto">
+            <h3 class="text-xl font-bold mb-6">Resultados actuales del formulario</h3>
+            <div id="currentResults" class="space-y-6">
+            </div>
         </div>
     `;
+
+    const currentResults = document.getElementById('currentResults');
+    const allResponses = responses[formId];
+
+    allResponses.forEach((response, index) => {
+        const responseDiv = document.createElement('div');
+        responseDiv.className = 'response-card';
+        responseDiv.innerHTML = `<h4 class="text-lg font-semibold mb-4">Respuesta ${index + 1}</h4>`;
+        
+        Object.entries(response).forEach(([question, answer]) => {
+            responseDiv.innerHTML += `
+                <div class="mb-2">
+                    <span class="font-medium">${question}:</span>
+                    <span class="ml-2">${answer}</span>
+                </div>
+            `;
+        });
+
+        currentResults.appendChild(responseDiv);
+    });
+
     showToast('Respuesta enviada con éxito');
 }
 
