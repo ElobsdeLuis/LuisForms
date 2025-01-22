@@ -147,8 +147,7 @@ const users = JSON.parse(localStorage.getItem('users') || '{}');
 const forms = JSON.parse(localStorage.getItem('forms') || '{}');
 const responses = JSON.parse(localStorage.getItem('responses') || '{}');
 
-// URL base con el dominio específico
-const BASE_URL = 'https://elobsdeluis.github.io/LuisForms';
+const BASE_URL = 'file:///C:/Users/Es07479538F/OneDrive%20-%20Enel%20Spa/Cristina/luis_vscode/formulario/index.html';
 
 document.addEventListener('DOMContentLoaded', () => {
     checkFormUrl();
@@ -408,18 +407,34 @@ function submitResponse() {
     const urlParams = new URLSearchParams(window.location.search);
     const encodedForm = urlParams.get('form');
     const formData = JSON.parse(atob(encodedForm));
-    const formResponse = {};
     
+    // Encontrar el ID del formulario basado en sus datos
+    let formId = null;
+    for (const [id, form] of Object.entries(forms)) {
+        if (form.title === formData.title && 
+            JSON.stringify(form.fields) === JSON.stringify(formData.fields)) {
+            formId = id;
+            break;
+        }
+    }
+    
+    if (!formId) {
+        showToast('Error al enviar la respuesta');
+        return;
+    }
+
+    const formResponse = {};
     const fields = document.getElementById('viewerFields').getElementsByClassName('field-container');
+    
     Array.from(fields).forEach(field => {
         const question = field.querySelector('label').textContent;
         const input = field.querySelector('input, select');
         formResponse[question] = input.value;
     });
 
-    let responses = JSON.parse(localStorage.getItem('responses') || '{}');
-    const formId = btoa(JSON.stringify(formData));
-    
+    // Añadir timestamp a la respuesta
+    formResponse.timestamp = new Date().toLocaleString();
+
     if (!responses[formId]) {
         responses[formId] = [];
     }
@@ -430,67 +445,63 @@ function submitResponse() {
     formViewer.innerHTML = `
         <div class="text-center py-8">
             <h2 class="text-2xl font-bold text-green-600 mb-4">¡Gracias por tu respuesta!</h2>
-            <p class="text-gray-600 mb-8">Tu respuesta ha sido registrada correctamente.</p>
-        </div>
-        <div class="max-w-3xl mx-auto">
-            <h3 class="text-xl font-bold mb-6">Resultados actuales del formulario</h3>
-            <div id="currentResults" class="space-y-6">
-            </div>
+            <p class="text-gray-600">Tu respuesta ha sido registrada correctamente.</p>
         </div>
     `;
-
-    const currentResults = document.getElementById('currentResults');
-    const allResponses = responses[formId];
-
-    allResponses.forEach((response, index) => {
-        const responseDiv = document.createElement('div');
-        responseDiv.className = 'response-card';
-        responseDiv.innerHTML = `<h4 class="text-lg font-semibold mb-4">Respuesta ${index + 1}</h4>`;
-        
-        Object.entries(response).forEach(([question, answer]) => {
-            responseDiv.innerHTML += `
-                <div class="mb-2">
-                    <span class="font-medium">${question}:</span>
-                    <span class="ml-2">${answer}</span>
-                </div>
-            `;
-        });
-
-        currentResults.appendChild(responseDiv);
-    });
 
     showToast('Respuesta enviada con éxito');
 }
 
 function viewResults(formId) {
+    const formData = forms[formId];
     const formResponses = responses[formId] || [];
     const resultsDiv = document.getElementById('resultsData');
     resultsDiv.innerHTML = '';
 
+    // Mostrar el título del formulario y el contador de respuestas
+    resultsDiv.innerHTML = `
+        <h3 class="text-2xl font-bold mb-6">${formData.title}</h3>
+        <p class="text-gray-600 mb-6">Total de respuestas: ${formResponses.length}</p>
+    `;
+
+    // Si no hay respuestas, mostrar mensaje
     if (formResponses.length === 0) {
-        resultsDiv.innerHTML = `
-            <div class="text-center py-8">
-                <p class="text-gray-600">Aún no hay respuestas para este formulario</p>
+        resultsDiv.innerHTML += `
+            <div class="response-card">
+                <p class="text-gray-500 text-center">No hay respuestas todavía para este formulario.</p>
             </div>
         `;
-    } else {
-        formResponses.forEach((response, index) => {
-            const responseDiv = document.createElement('div');
-            responseDiv.className = 'response-card';
-            responseDiv.innerHTML = `<h4 class="text-lg font-semibold mb-4">Respuesta ${index + 1}</h4>`;
-            
-            Object.entries(response).forEach(([question, answer]) => {
-                responseDiv.innerHTML += `
-                    <div class="mb-2">
-                        <span class="font-medium">${question}:</span>
-                        <span class="ml-2">${answer}</span>
-                    </div>
-                `;
-            });
-
-            resultsDiv.appendChild(responseDiv);
-        });
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('results').style.display = 'block';
+        return;
     }
+
+    // Mostrar cada respuesta con su timestamp
+    formResponses.forEach((response, index) => {
+        const responseDiv = document.createElement('div');
+        responseDiv.className = 'response-card';
+        
+        // Añadir encabezado con número de respuesta y timestamp
+        responseDiv.innerHTML = `
+            <div class="flex justify-between items-center mb-4">
+                <h4 class="text-lg font-semibold">Respuesta ${index + 1}</h4>
+                <span class="text-sm text-gray-500">${response.timestamp || 'Fecha no disponible'}</span>
+            </div>
+        `;
+        
+        // Mostrar cada pregunta y respuesta
+        formData.fields.forEach(field => {
+            const answer = response[field.question] || "Sin respuesta";
+            responseDiv.innerHTML += `
+                <div class="mb-2 p-2 bg-gray-50 rounded">
+                    <span class="font-medium text-gray-700">${field.question}:</span>
+                    <span class="ml-2 text-gray-900">${answer}</span>
+                </div>
+            `;
+        });
+
+        resultsDiv.appendChild(responseDiv);
+    });
 
     document.getElementById('dashboard').style.display = 'none';
     document.getElementById('results').style.display = 'block';
