@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creador de Formularios</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .toast {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background-color: #1a1a1a;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            transform: translateY(100%);
+            opacity: 0;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .field-container {
+            background-color: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-link {
+            word-break: break-all;
+            font-family: monospace;
+            background-color: #f3f4f6;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            margin: 0.5rem 0;
+            font-size: 0.875rem;
+        }
+
+        .response-card {
+            background-color: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-indigo-600 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-white text-xl font-bold">LuisForms</span>
+                </div>
+                <div id="userInfo" class="hidden items-center">
+                    <span class="text-white mr-4" id="userEmail"></span>
+                    <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors">
+                        Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div id="auth" class="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Iniciar Sesión</h2>
+            <div class="space-y-4">
+                <input type="email" id="email" placeholder="Email" 
+                    class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="password" id="password" placeholder="Contraseña" 
+                    class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <div class="flex space-x-4">
+                    <button onclick="login()" 
+                        class="w-1/2 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
+                        Iniciar Sesión
+                    </button>
+                    <button onclick="register()" 
+                        class="w-1/2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
+                        Registrarse
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="dashboard" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Mis Formularios</h2>
+                <button onclick="showFormBuilder()" 
+                    class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors">
+                    Crear Nuevo Formulario
+                </button>
+            </div>
+            <div id="formsList" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
+        </div>
+
+        <div id="formBuilder" class="hidden max-w-3xl mx-auto bg-white rounded-lg shadow-md p-8">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Constructor de Formulario</h2>
+            <input type="text" id="formTitle" placeholder="Título del formulario" 
+                class="w-full px-4 py-2 border rounded-md mb-6 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <div id="fields" class="space-y-4"></div>
+            <div class="flex justify-between mt-6">
+                <button onclick="addField()" 
+                    class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors">
+                    Añadir Campo
+                </button>
+                <button onclick="saveForm()" 
+                    class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors">
+                    Guardar Formulario
+                </button>
+            </div>
+        </div>
+
+        <div id="formViewer" class="hidden max-w-3xl mx-auto bg-white rounded-lg shadow-md p-8">
+            <h2 id="viewerTitle" class="text-2xl font-bold mb-6 text-gray-800"></h2>
+            <div id="viewerFields" class="space-y-4"></div>
+            <button onclick="submitResponse()" 
+                class="mt-6 w-full bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors">
+                Enviar Respuesta
+            </button>
+        </div>
+
+        <div id="results" class="hidden max-w-3xl mx-auto bg-white rounded-lg shadow-md p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Resultados</h2>
+                <button onclick="backToDashboard()" 
+                    class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 transition-colors">
+                    Volver
+                </button>
+            </div>
+            <div id="resultsData" class="space-y-6"></div>
+        </div>
+    </main>
+
+    <script>
+        let currentUser = null;
+        const users = JSON.parse(localStorage.getItem('users') || '{}');
+        const forms = JSON.parse(localStorage.getItem('forms') || '{}');
+        const responses = JSON.parse(localStorage.getItem('responses') || '{}');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkFormUrl();
+        });
+
+        function showToast(message, duration = 3000) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        function checkFormUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedForm = urlParams.get('form');
+
+            if (encodedForm) {
+                try {
+                    const formData = JSON.parse(atob(encodedForm));
+                    showFormViewer(formData);
+                } catch (e) {
+                    console.error('Invalid form data');
+                }
+            }
+        }
+
+        function register() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showToast('Por favor, completa todos los campos');
+                return;
+            }
+            
+            if (users[email]) {
+                showToast('Este usuario ya existe');
+                return;
+            }
+
+            users[email] = { password, forms: [] };
+            localStorage.setItem('users', JSON.stringify(users));
+            login();
+        }
+
+        function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (users[email]?.password === password) {
+                currentUser = email;
+                document.getElementById('auth').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                document.getElementById('userInfo').style.display = 'flex';
+                document.getElementById('userEmail').textContent = email;
+                loadForms();
+                showToast('Bienvenido ' + email);
+            } else {
+                showToast('Credenciales incorrectas');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('auth').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            showToast('Sesión cerrada');
+        }
+
+        function loadForms() {
+            const formsList = document.getElementById('formsList');
+            formsList.innerHTML = '';
+            
+            users[currentUser].forms.forEach(formId => {
+                const form = forms[formId];
+                const div = document.createElement('div');
+                div.className = 'bg-white rounded-lg shadow-md p-6';
+                const encodedForm = btoa(JSON.stringify(form));
+                const formUrl = `${window.location.pathname}?form=${encodedForm}`;
+                
+                div.innerHTML = `
+                    <h3 class="text-xl font-semibold mb-4">${form.title}</h3>
+                    <div class="form-link">
+                        <p class="text-sm text-gray-600 mb-1">Enlace para compartir:</p>
+                        <p class="text-sm">${formUrl}</p>
+                    </div>
+                    <div class="flex justify-between mt-4">
+                        <button onclick="viewResults('${formId}')" 
+                            class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors">
+                            Ver Resultados
+                        </button>
+                        <button onclick="deleteForm('${formId}')" 
+                            class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
+                            Eliminar
+                        </button>
+                    </div>
+                `;
+                formsList.appendChild(div);
+            });
+        }
+
+        function showFormBuilder() {
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('formBuilder').style.display = 'block';
+            document.getElementById('fields').innerHTML = '';
+            document.getElementById('formTitle').value = '';
+        }
+
+        function addField() {
+            const fieldsDiv = document.getElementById('fields');
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'field-container';
+            fieldDiv.innerHTML = `
+                <div class="flex items-center justify-between mb-4">
+                    <input type="text" placeholder="Pregunta" class="question w-2/3 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <select class="type w-1/4 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="text">Texto</option>
+                        <option value="number">Número</option>
+                        <option value="select">Opción Múltiple</option>
+                    </select>
+                </div>
+                <div class="options hidden">
+                    <input type="text" placeholder="Opciones (separadas por coma)" 
+                        class="w-full px-4 py-2 border rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <button onclick="this.parentElement.remove()" 
+                    class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
+                    Eliminar Campo
+                </button>
+            `;
+
+            fieldDiv.querySelector('.type').addEventListener('change', function(e) {
+                const optionsDiv = fieldDiv.querySelector('.options');
+                optionsDiv.style.display = e.target.value === 'select' ? 'block' : 'none';
+            });
+
+            fieldsDiv.appendChild(fieldDiv);
+        }
+
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        function saveForm() {
+            const title = document.getElementById('formTitle').value;
+            if (!title) {
+                showToast('Por favor, añade un título al formulario');
+                return;
+            }
+
+            const fields = Array.from(document.getElementsByClassName('field-container')).map(field => ({
+                question: field.querySelector('.question').value,
+                type: field.querySelector('.type').value,
+                options: field.querySelector('.type').value === 'select' ? 
+                    field.querySelector('.options input').value.split(',').map(o => o.trim()) : []
+            }));
+
+            if (fields.length === 0) {
+                showToast('Por favor, añade al menos un campo al formulario');
+                return;
+            }
+
+            const formData = { title, fields };
+            const formId = generateUUID();
+            forms[formId] = formData;
+            users[currentUser].forms.push(formId);
+
+            localStorage.setItem('forms', JSON.stringify(forms));
+            localStorage.setItem('users', JSON.stringify(users));
+
+            showToast('Formulario guardado con éxito');
+            document.getElementById('formBuilder').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            loadForms();
+        }
+
+        function deleteForm(formId) {
+            if (!confirm('¿Estás seguro de que deseas eliminar este formulario?')) {
+                return;
+            }
+
+            users[currentUser].forms = users[currentUser].forms.filter(id => id !== formId);
+            delete forms[formId];
+            delete responses[formId];
+
+            localStorage.setItem('forms', JSON.stringify(forms));
+            localStorage.setItem('users', JSON.stringify(users));
+            localStorage.setItem('responses', JSON.stringify(responses));
+
+            loadForms();
+            showToast('Formulario eliminado con éxito');
+        }
+
+        function showFormViewer(formData) {
+            document.getElementById('auth').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('formViewer').style.display = 'block';
+            
+            document.getElementById('viewerTitle').textContent = formData.title;
+            const viewerFields = document.getElementById('viewerFields');
+            viewerFields.innerHTML = '';
+            
+            formData.fields.forEach(field => {
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'field-container';
+                fieldDiv.innerHTML = `<label class="block mb-2 font-medium">${field.question}</label>`;
+
+                if (field.type === 'select') {
+                    const select = document.createElement('select');
+                    select.className = 'w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500';
+                    field.options.forEach(option => {
+                        const optionEl = document.createElement('option');
+                        optionEl.value = option;
+                        optionEl.textContent = option;
+                        select.appendChild(optionEl);
+                    });
+                    fieldDiv.appendChild(select);
+                } else {
+                    const input = document.createElement('input');
+                    input.type = field.type;
+                    input.className = 'w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500';
+                    fieldDiv.appendChild(input);
+                }
+
+                viewerFields.appendChild(fieldDiv);
+            });
+        }
+
+        function submitResponse() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedForm = urlParams.get('form');
+            const formResponse = {};
+            
+            const fields = document.getElementById('viewerFields').getElementsByClassName('field-container');
+            Array.from(fields).forEach(field => {
+                const question = field.querySelector('label').textContent;
+                const input = field.querySelector('input, select');
+                formResponse[question] = input.value;
+            });
+
+            let responses = JSON.parse(localStorage.getItem('responses') || '{}');
+            const formId = btoa(JSON.stringify({ responses: formResponse }));
+            
+            if (!responses[formId]) {
+                responses[formId] = [];
+            }
+            responses[formId].push(formResponse);
+            localStorage.setItem('responses', JSON.stringify(responses));
+
+            document.getElementById('formViewer').innerHTML = `
+                <div class="text-center py-8">
+                    <h2 class="text-2xl font-bold text-green-600 mb-4">¡Gracias por tu respuesta!</h2>
+                    <p class="text-gray-600">Tu respuesta ha sido registrada correctamente.</p>
+                </div>
+            `;
+            showToast('Respuesta enviada con éxito');
+        }
+
+        function viewResults(formId) {
+            const formResponses = responses[formId] || [];
+            const resultsDiv = document.getElementById('resultsData');
+            resultsDiv.innerHTML = '';
+
+            if (formResponses.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-gray-600">Aún no hay respuestas para este formulario</p>
+                    </div>
+                `;
+            } else {
+                formResponses.forEach((response, index) => {
+                    const responseDiv = document.createElement('div');
+                    responseDiv.className = 'response-card';
+                    responseDiv.innerHTML = `<h4 class="text-lg font-semibold mb-4">Respuesta ${index + 1}</h4>`;
+                    
+                    Object.entries(response).forEach(([question, answer]) => {
+                        responseDiv.innerHTML += `
+                            <div class="mb-2">
+                                <span class="font-medium">${question}:</span>
+                                <span class="ml-2">${answer}</span>
+                            </div>
+                        `;
+                    });
+
+                    resultsDiv.appendChild(responseDiv);
+                });
+            }
+
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function backToDashboard() {
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+        }
+
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedForm = urlParams.get('form');
+            
+            if (encodedForm) {
+                try {
+                    const formData = JSON.parse(atob(encodedForm));
+                    showFormViewer(formData);
+                } catch (e) {
+                    console.error('Invalid form data');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
